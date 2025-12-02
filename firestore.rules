@@ -106,7 +106,7 @@ service cloud.firestore {
 
     // Allow collection group query on 'receipts'
     match /{path=**}/receipts/{receiptId} {
-      allow read: if isAuthenticated();
+      allow get, list: if isAuthenticated();
     }
   }
 }
