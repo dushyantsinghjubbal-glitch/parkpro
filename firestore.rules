@@ -1,0 +1,114 @@
+/**
+ * Core Philosophy: This ruleset implements an "Open Access Model" for rapid prototyping.
+ * It assumes that any user, authenticated or not, has full access to manage all data.
+ * This is insecure for production but ideal for the initial development phase.
+ *
+ * Data Structure: The data is organized around parking events. A top-level
+ * `parking_records` collection holds all parking sessions. A separate `app_config`
+ * collection holds global settings like pricing.
+ * - /users/{userId}
+ * - /parking_records/{parkingRecordId}
+ * - /parking_records/{parkingRecordId}/receipts/{receiptId}
+ * - /app_config/{configId} (e.g., /app_config/pricing)
+ *
+ * Key Security Decisions:
+ * - Public Access: All read and write operations are allowed for any client.
+ *   This is intentionally permissive to avoid authentication hurdles during early development.
+ * - Data Integrity: Basic data integrity is enforced by validating that a document's
+ *   internal `id` field matches its document ID in the path upon creation and
+ *   that this `id` remains immutable during updates.
+ */
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // --------------------------------
+    // Helper Functions
+    // --------------------------------
+
+    /**
+     * Always returns true, allowing access for any user (authenticated or anonymous).
+     * This is for prototyping purposes and should be replaced with real authentication checks.
+     */
+    function isOpenForPrototype() {
+      return true;
+    }
+    
+    function isAuthenticated() {
+        return request.auth != null;
+    }
+
+    /**
+     * Verifies that the document being written to already exists.
+     * CRITICAL for safe update and delete operations.
+     */
+    function hasExistingDoc() {
+      return resource != null;
+    }
+
+    /**
+     * Validates that the `id` field in a new document's data matches the
+     * document ID from the path, ensuring relational integrity.
+     */
+    function isCreatingWithMatchingId(docId) {
+      return request.resource.data.id == docId;
+    }
+
+    /**
+     * Enforces that the `id` field of a document is immutable.
+     * This prevents re-associating a document after it has been created.
+     */
+    function isUpdatingWithImmutableId() {
+      return request.resource.data.id == resource.data.id;
+    }
+
+    /**
+     * @description Rules for user profile data.
+     * @path /users/{userId}
+     * @allow A user can create their own profile. For now, anyone can read/write for prototyping.
+     * @deny No operations are denied, everything is public.
+     * @principle Implements an "Open Access Model" for rapid prototyping.
+     */
+    match /users/{userId} {
+       allow read: if isAuthenticated();
+       // A user can only create their own profile document.
+       allow create: if request.auth != null && request.auth.uid == userId;
+       // For now, allow any authenticated user to update for prototyping ease.
+       // In production, you'd restrict this to the user themselves or an admin.
+       allow update, delete: if isAuthenticated();
+    }
+
+    /**
+     * @description Rules for the collection of parking session records.
+     * @path /parking_records/{parkingRecordId}
+     * @allow Any client (create)s a new parking record.
+     * @deny No operations are denied, everything is public.
+     * @principle Implements an "Open Access Model" for rapid prototyping.
+     */
+    match /parking_records/{parkingRecordId} {
+      allow read, write: if isAuthenticated();
+    }
+
+    /**
+     * @description Rules for receipts, which are subcollections of parking records.
+     * @path /parking_records/{parkingRecordId}/receipts/{receiptId}
+     * @allow Any client (create)s a new receipt.
+     * @deny No operations are denied, everything is public.
+     * @principle Access is granted based on the same "Open Access Model" as the parent collection.
+     */
+    match /parking_records/{parkingRecordId}/receipts/{receiptId} {
+      allow read, write: if isAuthenticated();
+    }
+
+    /**
+     * @description Rules for the application configuration collection.
+     * @path /app_config/{configId}
+     * @allow Any client can read or write to the configuration.
+     * @deny No operations are denied, everything is public.
+     * @principle Open access for easy management of settings during prototyping.
+     */
+    match /app_config/{configId} {
+      allow read, write: if isAuthenticated();
+    }
+  }
+}

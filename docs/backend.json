@@ -1,0 +1,224 @@
+{
+  "entities": {
+    "UserProfile": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "UserProfile",
+      "type": "object",
+      "description": "Represents a user's profile, storing their role within the application.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "The user's unique identifier (UID)."
+        },
+        "email": {
+          "type": "string",
+          "format": "email",
+          "description": "The user's email address."
+        },
+        "role": {
+          "type": "string",
+          "description": "The user's role in the system.",
+          "enum": ["admin", "staff"]
+        }
+      },
+      "required": ["id", "email", "role"]
+    },
+    "ParkingRecord": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "ParkingRecord",
+      "type": "object",
+      "description": "Represents a single parking session record.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the parking record."
+        },
+        "licensePlate": {
+          "type": "string",
+          "description": "The license plate number of the parked vehicle."
+        },
+        "customerMobileNumber": {
+          "type": "string",
+          "description": "The mobile number of the customer."
+        },
+        "entryTimestamp": {
+          "type": "string",
+          "description": "Timestamp of when the vehicle entered the parking facility.",
+          "format": "date-time"
+        },
+        "exitTimestamp": {
+          "type": "string",
+          "description": "Timestamp of when the vehicle exited the parking facility. Null if the vehicle is still parked.",
+          "format": "date-time"
+        },
+        "parkingStatus": {
+          "type": "string",
+          "description": "The current status of the parking record ('parked', 'exited')."
+        },
+        "receiptId": {
+          "type": "string",
+          "description": "Reference to the Receipt. (Relationship: ParkingRecord 1:1 Receipt)"
+        }
+      },
+      "required": [
+        "id",
+        "licensePlate",
+        "customerMobileNumber",
+        "entryTimestamp",
+        "parkingStatus"
+      ]
+    },
+    "Receipt": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Receipt",
+      "type": "object",
+      "description": "Represents a payment receipt for a parking session.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the receipt."
+        },
+        "carNumber": {
+          "type": "string",
+          "description": "The license plate number of the parked vehicle."
+        },
+        "entryTime": {
+          "type": "string",
+          "description": "Timestamp of when the vehicle entered the parking facility.",
+          "format": "date-time"
+        },
+        "exitTime": {
+          "type": "string",
+          "description": "Timestamp of when the vehicle exited the parking facility.",
+          "format": "date-time"
+        },
+        "duration": {
+          "type": "number",
+          "description": "The duration of the parking session in minutes."
+        },
+        "charges": {
+          "type": "number",
+          "description": "The total charges for the parking session."
+        },
+        "exitTimestamp": {
+          "type": "string",
+          "description": "Timestamp of when the payment was processed.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "carNumber",
+        "entryTime",
+        "exitTime",
+        "duration",
+        "charges",
+        "exitTimestamp"
+      ]
+    },
+    "PricingConfig": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "PricingConfig",
+      "type": "object",
+      "description": "Stores the dynamic pricing configuration for the parking facility.",
+      "properties": {
+        "hourlyRate": {
+          "type": "number",
+          "description": "The cost per hour of parking, in the smallest currency unit (e.g., paisa)."
+        },
+        "dailyRate": {
+          "type": "number",
+          "description": "The flat rate for parking longer than the specified threshold, in the smallest currency unit."
+        },
+        "monthlyRate": {
+          "type": "number",
+          "description": "The cost for a monthly subscription, in the smallest currency unit."
+        },
+        "dailyRateHoursThreshold": {
+          "type": "number",
+          "description": "The number of hours after which the daily rate is applied."
+        }
+      },
+      "required": ["hourlyRate", "dailyRate", "monthlyRate", "dailyRateHoursThreshold"]
+    }
+  },
+  "auth": {
+    "providers": [
+      "password",
+      "anonymous"
+    ]
+  },
+  "firestore": {
+    "structure": [
+      {
+        "path": "/users/{userId}",
+        "definition": {
+          "entityName": "UserProfile",
+          "schema": {
+            "$ref": "#/entities/UserProfile"
+          },
+          "description": "Stores user profile information, including their role.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The user's unique identifier (UID)."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/parking_records/{parkingRecordId}",
+        "definition": {
+          "entityName": "ParkingRecord",
+          "schema": {
+            "$ref": "#/entities/ParkingRecord"
+          },
+          "description": "Stores parking session information, including license plate, customer mobile number, entry timestamp, exit timestamp, parking status, and a reference to the receipt.",
+          "params": [
+            {
+              "name": "parkingRecordId",
+              "description": "Unique identifier for the parking record."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/parking_records/{parkingRecordId}/receipts/{receiptId}",
+        "definition": {
+          "entityName": "Receipt",
+          "schema": {
+            "$ref": "#/entities/Receipt"
+          },
+          "description": "Stores receipt data for each parking record. Includes car number, entry time, exit time, duration, charges, and payment timestamp.",
+          "params": [
+            {
+              "name": "parkingRecordId",
+              "description": "Unique identifier for the parking record."
+            },
+            {
+              "name": "receiptId",
+              "description": "Unique identifier for the receipt."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/app_config/{configId}",
+        "definition": {
+          "entityName": "PricingConfig",
+          "schema": {
+            "$ref": "#/entities/PricingConfig"
+          },
+          "description": "Stores application-wide configuration. A document with id 'pricing' holds the dynamic pricing rules.",
+          "params": [
+            {
+              "name": "configId",
+              "description": "The identifier for the configuration document, e.g., 'pricing'."
+            }
+          ]
+        }
+      }
+    ],
+    "indexes": []
+  }
+}
