@@ -87,28 +87,26 @@ service cloud.firestore {
      */
     match /parking_records/{parkingRecordId} {
       allow read, write: if isAuthenticated();
+        
+      /**
+       * @description Rules for receipts, which are subcollections of parking records.
+       * @path /parking_records/{parkingRecordId}/receipts/{receiptId}
+       * @allow Any client (create)s a new receipt.
+       * @deny No operations are denied, everything is public.
+       * @principle Access is granted based on the same "Open Access Model" as the parent collection.
+       */
+      match /receipts/{receiptId} {
+        allow read, write: if isAuthenticated();
+      }
     }
 
-    /**
-     * @description Rules for receipts, which are subcollections of parking records.
-     * @path /parking_records/{parkingRecordId}/receipts/{receiptId}
-     * @allow Any client (create)s a new receipt.
-     * @deny No operations are denied, everything is public.
-     * @principle Access is granted based on the same "Open Access Model" as the parent collection.
-     */
-    match /parking_records/{parkingRecordId}/receipts/{receiptId} {
-      allow read, write: if isAuthenticated();
-    }
-
-    /**
-     * @description Rules for the application configuration collection.
-     * @path /app_config/{configId}
-     * @allow Any client can read or write to the configuration.
-     * @deny No operations are denied, everything is public.
-     * @principle Open access for easy management of settings during prototyping.
-     */
     match /app_config/{configId} {
       allow read, write: if isAuthenticated();
+    }
+
+    // Allow collection group query on 'receipts'
+    match /{path=**}/receipts/{receiptId} {
+      allow read: if isAuthenticated();
     }
   }
 }
