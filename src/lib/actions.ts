@@ -10,7 +10,6 @@ import { initializeServerApp } from '@/firebase/server-init';
 import type { ParkingRecord, Receipt, PricingConfig } from './types';
 import { v4 as uuidv4 } from 'uuid';
 import { getPricingConfig } from './actions/pricing';
-import { generateReceiptPDF } from "@/lib/pdf-receipt";
 
 const ParkCarSchema = z.object({
   licensePlate: z.string().min(3, 'License plate must be at least 3 characters.'),
@@ -140,6 +139,8 @@ export async function checkoutCar(carId: string) {
         );
         
         receiptDataForFlow = {
+            carId: car.id,
+            receiptId: receiptId,
             carNumber: car.licensePlate,
             entryTime: car.entryTimestamp,
             exitTime: exitTimestamp,
@@ -188,16 +189,6 @@ export async function checkoutCar(carId: string) {
           receiptId: receiptId,
         });
     });
-
-    const pdfUrl = await generateReceiptPDF({
-      carNumber: car!.licensePlate,
-      entryTime: car!.entryTimestamp,
-      exitTime: receiptDataForFlow.exitTime,
-      parkingDuration: receiptDataForFlow.parkingDuration,
-      charges: receiptDataForFlow.charges,
-    });
-    
-    receiptDataForFlow.pdfUrl = pdfUrl;
 
     revalidatePath('/dashboard');
 
