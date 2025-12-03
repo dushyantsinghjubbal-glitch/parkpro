@@ -11,7 +11,8 @@ import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { collection, query, where } from 'firebase/firestore';
 import { Skeleton } from '../ui/skeleton';
 import { ScrollArea } from '../ui/scroll-area';
-import { getRevenueData, calculateRevenueStats } from "@/actions/revenue";
+import { getRevenueData } from "@/actions/revenue";
+import { calculateRevenueStats } from '@/lib/revenue-utils';
 import { Separator } from '../ui/separator';
 
 function CarTimer({ entryTime }: { entryTime: string | Date }) {
@@ -180,6 +181,7 @@ export function DashboardClient() {
                             <TableHeader>
                                 <TableRow>
                                     <TableHead>License Plate</TableHead>
+
                                     <TableHead>Expires In</TableHead>
                                     <TableHead>Entry Date</TableHead>
                                 </TableRow>
