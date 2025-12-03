@@ -2,9 +2,11 @@
 
 import { initializeServerApp } from "@/firebase/server-init";
 import { collection, getDocs } from "firebase/firestore";
+import { calculateRevenueStats } from "@/lib/revenue-utils";
 
 /**
  * Fetch all revenue records from Firestore
+ * This MUST remain an async server action.
  */
 export async function getRevenueData() {
   try {
@@ -12,14 +14,15 @@ export async function getRevenueData() {
     const revenueRef = collection(firestore, "revenue");
     const snapshot = await getDocs(revenueRef);
 
-    const data = snapshot.docs.map((doc) => ({
+    const records = snapshot.docs.map((doc) => ({
       id: doc.id,
       ...doc.data(),
     })) as any[];
 
-    return data;
-  } catch (e) {
-    console.error("Error fetching revenue:", e);
+    return records;
+  } catch (err) {
+    console.error("Error fetching revenue:", err);
     return [];
   }
 }
+
