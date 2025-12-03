@@ -102,8 +102,6 @@ export function ExitFlow({ onSuccess }: { onSuccess?: () => void }) {
         }
     });
   };
-  
-  const formattedReceiptText = `Parking Receipt\n--------------------\nCar Number: ${receiptData?.carNumber}\nEntry: ${formatTime(receiptData?.entryTime)}\nExit: ${formatTime(receiptData?.exitTime)}\nDuration: ${receiptData?.parkingDuration}\nTotal: Rs ${receiptData?.charges.toFixed(2)}`;
 
   const handleScanSuccess = (plate: string) => {
     form.setValue('licensePlate', plate);
