@@ -14,40 +14,14 @@
  * Key Security Decisions:
  * - Public Access: All read and write operations are allowed for any client.
  *   This is intentionally permissive to avoid authentication hurdles during early development.
- * - Data Integrity: Basic data integrity is enforced by validating that a document's
- *   internal `id` field matches its document ID in the path upon creation and
- *   that this `id` remains immutable during updates.
  */
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-
-    function isAuthenticated() {
-      return request.auth != null;
-    }
-
-    match /users/{userId} {
-       // Any authenticated user can read profiles.
-       allow read: if isAuthenticated();
-       // A user can only create their own profile document.
-       allow create: if request.auth != null && request.auth.uid == userId;
-       // Any authenticated user can update any profile for prototyping.
-       allow update, delete: if isAuthenticated();
-    }
-
-    match /parking_records/{parkingRecordId} {
-      // Allow all authenticated users to read and write parking records.
-      allow read, write: if isAuthenticated();
-
-      match /receipts/{receiptId} {
-        // Allow all authenticated users to read and write receipts.
-        allow read, write: if isAuthenticated();
-      }
-    }
-
-    match /app_config/{configId} {
-      // Allow all authenticated users to read and write app configuration.
-      allow read, write: if isAuthenticated();
+    // Allow all reads and writes to any document in the database.
+    // This is insecure for production but is acceptable for early-stage prototyping.
+    match /{document=**} {
+      allow read, write: if true;
     }
   }
 }
