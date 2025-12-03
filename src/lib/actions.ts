@@ -114,6 +114,7 @@ export async function checkoutCar(carId: string) {
     let car: ParkingRecord | null = null;
     let receiptDataForFlow: any;
     let receiptId = uuidv4();
+    let revenueId = uuidv4(); // NEW revenue doc ID
 
     const pricingConfig = await getPricingConfig();
 
@@ -131,7 +132,11 @@ export async function checkoutCar(carId: string) {
             throw new Error("MONTHLY SUBSCRIPTION CAN'T EXIT");
         }
         
-        const charges = calculateCharges({hours: duration.hours, minutes: duration.minutes, days: duration.days}, car.customerType, pricingConfig);
+        const charges = calculateCharges(
+            {hours: duration.hours, minutes: duration.minutes, days: duration.days},
+            car.customerType,
+            pricingConfig
+        );
         
         receiptDataForFlow = {
             carNumber: car.licensePlate,
@@ -140,8 +145,9 @@ export async function checkoutCar(carId: string) {
             parkingDuration: duration.formatted,
             charges: charges,
         };
-        
+
         let receiptText = `Thank you for parking with us!\nCar: ${car.licensePlate}\nDuration: ${duration.formatted}\nTotal: Rs ${charges.toFixed(2)}`;
+
         if (process.env.GEMINI_API_KEY) {
           try {
             const result = await generatePaymentReceipt(receiptDataForFlow);
@@ -149,8 +155,6 @@ export async function checkoutCar(carId: string) {
           } catch(e) {
             console.error("AI receipt generation failed. Falling back to default text.", e);
           }
-        } else {
-            console.log("GEMINI_API_KEY not found. Skipping AI receipt generation.");
         }
 
         receiptDataForFlow.receipt = receiptText;
@@ -164,21 +168,31 @@ export async function checkoutCar(carId: string) {
             exitTimestamp: exitTimestamp,
         };
 
+        // Save Receipt
         const receiptRef = doc(firestore, `parking_records/${carId}/receipts`, receiptId);
-        
         transaction.set(receiptRef, { ...receiptRecord, id: receiptId });
-        
+
+        // Update Car Record
         transaction.update(carDocRef, {
             parkingStatus: 'exited',
             exitTimestamp: exitTimestamp,
             receiptId: receiptId
         });
+
+        // ⭐ NEW: Save Revenue Record
+        const revenueRef = doc(firestore, 'revenue', revenueId);
+        transaction.set(revenueRef, {
+          id: revenueId,
+          amount: charges,
+          type: car!.customerType === 'monthly' ? 'monthly' : 'daily',
+          date: exitTimestamp,
+          carPlate: car!.licensePlate,
+          receiptId: receiptId,
+        });
     });
 
-
     revalidatePath('/dashboard');
-    
-    // Add customerMobileNumber to the return object so it can be used on the client
+
     return { success: { ...receiptDataForFlow, customerMobile: car!.customerMobileNumber } };
 
   } catch (e) {
@@ -186,7 +200,7 @@ export async function checkoutCar(carId: string) {
     if (e instanceof Error) {
         return { error: e.message };
     }
-    return { error: 'Failed to generate receipt or checkout car.' };
+    return { error: 'Checkout failed.' };
   }
 }
 
