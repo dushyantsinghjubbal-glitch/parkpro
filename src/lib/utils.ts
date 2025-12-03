@@ -43,13 +43,16 @@ export function calculateCharges(
 
   // Calculate total hours, rounding up if there are any minutes.
   const totalHours = duration.days * 24 + duration.hours + (duration.minutes > 0 ? 1 : 0);
-
-  // If total hours exceeds the threshold, double the hourly rate for the entire duration.
+  
+  // Calculate the base charge.
+  let totalCharge = totalHours * pricing.hourlyRate;
+  
+  // If total hours exceeds the threshold, double the charge.
   if (totalHours > pricing.dailyRateHoursThreshold) {
-    return totalHours * pricing.hourlyRate * 2;
+    let baseChargeForThreshold = pricing.dailyRateHoursThreshold * pricing.hourlyRate;
+    let extraHours = totalHours - pricing.dailyRateHoursThreshold;
+    totalCharge = baseChargeForThreshold + (extraHours * pricing.hourlyRate * 2);
   }
   
-  // Otherwise, charge the standard hourly rate.
-  const totalCharge = totalHours * pricing.hourlyRate;
   return totalCharge;
 }
