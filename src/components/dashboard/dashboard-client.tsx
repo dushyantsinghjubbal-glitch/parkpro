@@ -5,7 +5,7 @@ import type { ParkingRecord } from '@/lib/types';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { Car, Clock, ParkingCircleOff, Loader2, BellRing, User } from 'lucide-react';
+import { Car, Clock, ParkingCircleOff, Loader2, BellRing, User, DollarSign, TrendingUp, Landmark } from 'lucide-react';
 import { formatDistanceToNow, addDays, differenceInDays } from 'date-fns';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { collection, query, where } from 'firebase/firestore';
@@ -78,9 +78,23 @@ export function DashboardClient() {
     return query(collection(firestore, 'parking_records'), where('parkingStatus', '==', 'parked'));
   }, [firestore]);
 
-  const { data: parkedCars, isLoading } = useCollection<ParkingRecord>(parkedCarsQuery);
+  const { data: parkedCars, isLoading: isLoadingCars } = useCollection<ParkingRecord>(parkedCarsQuery);
   
   const [expiringSubscriptions, setExpiringSubscriptions] = useState<ParkingRecord[]>([]);
+
+  const [revenueStats, setRevenueStats] = useState({ todayTotal: 0, monthTotal: 0, allTimeTotal: 0 });
+  const [isLoadingRevenue, setIsLoadingRevenue] = useState(true);
+
+  useEffect(() => {
+    async function fetchRevenue() {
+      setIsLoadingRevenue(true);
+      const records = await getRevenueData();
+      const stats = calculateRevenueStats(records);
+      setRevenueStats(stats);
+      setIsLoadingRevenue(false);
+    }
+    fetchRevenue();
+  }, []);
 
   useEffect(() => {
     if (parkedCars) {
@@ -97,17 +111,18 @@ export function DashboardClient() {
   }, [parkedCars]);
 
   const monthlySubscribers = parkedCars?.filter(c => c.customerType === 'monthly').length ?? 0;
+  const isLoading = isLoadingCars || isLoadingRevenue;
 
   return (
     <div className="space-y-6">
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-2">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Currently Parked</CardTitle>
             <Car className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            {isLoading ? (
+            {isLoadingCars ? (
                 <Skeleton className="h-8 w-1/4" />
             ) : (
                 <div className="text-2xl font-bold">{parkedCars?.length ?? 0}</div>
@@ -121,13 +136,55 @@ export function DashboardClient() {
             <User className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            {isLoading ? (
+            {isLoadingCars ? (
                 <Skeleton className="h-8 w-1/4" />
             ) : (
                 <div className="text-2xl font-bold">{monthlySubscribers}</div>
             )}
             <p className="text-xs text-muted-foreground">Cars with monthly passes</p>
           </CardContent>
+        </Card>
+        <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Today&apos;s Revenue</CardTitle>
+                <DollarSign className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+                {isLoadingRevenue ? (
+                    <Skeleton className="h-8 w-1/2" />
+                ) : (
+                    <div className="text-2xl font-bold">Rs {revenueStats.todayTotal.toFixed(2)}</div>
+                )}
+                <p className="text-xs text-muted-foreground">Revenue collected today</p>
+            </CardContent>
+        </Card>
+        <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">This Month&apos;s Revenue</CardTitle>
+                <TrendingUp className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+                {isLoadingRevenue ? (
+                    <Skeleton className="h-8 w-1/2" />
+                ) : (
+                    <div className="text-2xl font-bold">Rs {revenueStats.monthTotal.toFixed(2)}</div>
+                )}
+                <p className="text-xs text-muted-foreground">Revenue for the current month</p>
+            </CardContent>
+        </Card>
+        <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">All-Time Revenue</CardTitle>
+                <Landmark className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+                {isLoadingRevenue ? (
+                    <Skeleton className="h-8 w-1/2" />
+                ) : (
+                    <div className="text-2xl font-bold">Rs {revenueStats.allTimeTotal.toFixed(2)}</div>
+                )}
+                <p className="text-xs text-muted-foreground">Total revenue generated</p>
+            </CardContent>
         </Card>
       </div>
 
@@ -175,7 +232,7 @@ export function DashboardClient() {
           <CardTitle>Active Parking Sessions</CardTitle>
         </CardHeader>
         <CardContent>
-          {isLoading ? (
+          {isLoadingCars ? (
             <div className="flex justify-center items-center py-16">
               <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
             </div>
