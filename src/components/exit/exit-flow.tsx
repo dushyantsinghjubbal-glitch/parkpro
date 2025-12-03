@@ -34,6 +34,7 @@ type ReceiptData = {
   charges: number;
   receipt: string;
   customerMobile: string;
+  pdfUrl?: string;
 };
 
 const formatTime = (dateString: string | undefined) => {
@@ -101,8 +102,6 @@ export function ExitFlow({ onSuccess }: { onSuccess?: () => void }) {
         }
     });
   };
-  
-  const formattedReceiptText = `Parking Receipt\n--------------------\nCar Number: ${receiptData?.carNumber}\nEntry: ${formatTime(receiptData?.entryTime)}\nExit: ${formatTime(receiptData?.exitTime)}\nDuration: ${receiptData?.parkingDuration}\nTotal: Rs ${receiptData?.charges.toFixed(2)}`;
 
   const handleScanSuccess = (plate: string) => {
     form.setValue('licensePlate', plate);
@@ -252,6 +251,9 @@ export function ExitFlow({ onSuccess }: { onSuccess?: () => void }) {
                     <div className="flex items-center"><Calendar className="mr-3 h-4 w-4 text-muted-foreground"/><strong>Exit:</strong><span className="ml-auto text-right">{formatTime(receiptData?.exitTime)}</span></div>
                     <div className="flex items-center"><Clock className="mr-3 h-4 w-4 text-muted-foreground"/><strong>Duration:</strong><span className="ml-auto">{receiptData?.parkingDuration}</span></div>
                     <div className="flex items-center text-lg font-bold"><strong>Total:</strong><span className="ml-auto">Rs {receiptData?.charges.toFixed(2)}</span></div>
+                    {receiptData?.pdfUrl && (
+                        <div className="flex items-center"><Link href={receiptData.pdfUrl} className="text-sm text-primary hover:underline" target="_blank">View PDF Receipt</Link></div>
+                    )}
                 </div>
                 {receiptData?.receipt && (
                 <>
@@ -265,11 +267,27 @@ export function ExitFlow({ onSuccess }: { onSuccess?: () => void }) {
                 </>
                 )}
                 <DialogFooter className="sm:justify-start pt-4">
-                <Button asChild className="w-full" size="lg">
-                    <Link href={`https://wa.me/${receiptData?.customerMobile}?text=${encodeURIComponent(formattedReceiptText)}`} target="_blank">
+                {receiptData && (
+                    <Button 
+                        className="w-full" 
+                        size="lg"
+                        onClick={() => {
+                            const text = 
+`*** PARKING RECEIPT ***
+Car: ${receiptData.carNumber}
+Entry: ${formatTime(receiptData.entryTime)}
+Exit: ${formatTime(receiptData.exitTime)}
+Duration: ${receiptData.parkingDuration}
+Total: Rs ${receiptData.charges.toFixed(2)}
+Thank you for parking with us!`;
+
+                            const url = `https://wa.me/${receiptData.customerMobile}?text=` + encodeURIComponent(text);
+                            window.open(url, "_blank");
+                        }}
+                    >
                         <Smartphone className="mr-2 h-4 w-4"/> Share via WhatsApp
-                    </Link>
-                </Button>
+                    </Button>
+                )}
                 </DialogFooter>
             </DialogContent>
         </Dialog>

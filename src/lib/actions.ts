@@ -115,7 +115,7 @@ export async function checkoutCar(carId: string) {
     let car: ParkingRecord | null = null;
     let receiptDataForFlow: any;
     let receiptId = uuidv4();
-    let revenueId = uuidv4(); // NEW revenue doc ID
+    let revenueId = uuidv4(); 
 
     const pricingConfig = await getPricingConfig();
 
@@ -169,18 +169,15 @@ export async function checkoutCar(carId: string) {
             exitTimestamp: exitTimestamp,
         };
 
-        // Save Receipt
         const receiptRef = doc(firestore, `parking_records/${carId}/receipts`, receiptId);
         transaction.set(receiptRef, { ...receiptRecord, id: receiptId });
 
-        // Update Car Record
         transaction.update(carDocRef, {
             parkingStatus: 'exited',
             exitTimestamp: exitTimestamp,
             receiptId: receiptId
         });
 
-        // ⭐ NEW: Save Revenue Record
         const revenueRef = doc(firestore, 'revenue', revenueId);
         transaction.set(revenueRef, {
           id: revenueId,
@@ -192,7 +189,6 @@ export async function checkoutCar(carId: string) {
         });
     });
 
-    // Generate PDF Receipt and upload to Firebase Storage
     const pdfUrl = await generateReceiptPDF({
       carNumber: car!.licensePlate,
       entryTime: car!.entryTimestamp,
@@ -200,8 +196,7 @@ export async function checkoutCar(carId: string) {
       parkingDuration: receiptDataForFlow.parkingDuration,
       charges: receiptDataForFlow.charges,
     });
-
-    // Attach PDF link to returned success object
+    
     receiptDataForFlow.pdfUrl = pdfUrl;
 
     revalidatePath('/dashboard');
