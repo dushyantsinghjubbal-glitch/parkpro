@@ -163,7 +163,7 @@ export function DashboardClient() {
                     <p className="text-xs text-muted-foreground">Revenue collected today</p>
                 </CardContent>
             </Card>
-        </Card>
+            
         </div>
 
         {expiringSubscriptions.length > 0 && (
