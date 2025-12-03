@@ -267,11 +267,25 @@ export function ExitFlow({ onSuccess }: { onSuccess?: () => void }) {
                 </>
                 )}
                 <DialogFooter className="sm:justify-start pt-4">
-                {receiptData?.pdfUrl && (
-                    <Button asChild className="w-full" size="lg">
-                        <Link href={`https://wa.me/${receiptData.customerMobile}?text=${encodeURIComponent(`Here is your parking receipt:\n${receiptData.pdfUrl}`)}`} target="_blank">
-                            <Smartphone className="mr-2 h-4 w-4"/> Share Receipt on WhatsApp
-                        </Link>
+                {receiptData && (
+                    <Button 
+                        className="w-full" 
+                        size="lg"
+                        onClick={() => {
+                            const text = 
+`*** PARKING RECEIPT ***
+Car: ${receiptData.carNumber}
+Entry: ${formatTime(receiptData.entryTime)}
+Exit: ${formatTime(receiptData.exitTime)}
+Duration: ${receiptData.parkingDuration}
+Total: Rs ${receiptData.charges.toFixed(2)}
+Thank you for parking with us!`;
+
+                            const url = `https://wa.me/${receiptData.customerMobile}?text=` + encodeURIComponent(text);
+                            window.open(url, "_blank");
+                        }}
+                    >
+                        <Smartphone className="mr-2 h-4 w-4"/> Share via WhatsApp
                     </Button>
                 )}
                 </DialogFooter>
