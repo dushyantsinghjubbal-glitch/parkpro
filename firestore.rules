@@ -103,10 +103,5 @@ service cloud.firestore {
     match /app_config/{configId} {
       allow read, write: if isAuthenticated();
     }
-
-    // Allow collection group query on 'receipts'
-    match /{path=**}/receipts/{receiptId} {
-      allow get, list: if isAuthenticated();
-    }
   }
 }
