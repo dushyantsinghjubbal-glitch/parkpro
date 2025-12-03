@@ -27,6 +27,8 @@ const SearchSchema = z.object({
 });
 
 type ReceiptData = {
+  carId: string;
+  receiptId: string;
   carNumber: string;
   entryTime: string;
   exitTime: string;
@@ -34,7 +36,6 @@ type ReceiptData = {
   charges: number;
   receipt: string;
   customerMobile: string;
-  pdfUrl?: string;
 };
 
 const formatTime = (dateString: string | undefined) => {
@@ -127,6 +128,8 @@ export function ExitFlow({ onSuccess }: { onSuccess?: () => void }) {
   };
   
   const showSearch = foundCars.length === 0 && selectedCar === null;
+
+  const pdfUrl = receiptData ? `/api/receipt-pdf?id=${receiptData.receiptId}&carId=${receiptData.carId}` : '';
 
   return (
     <>
@@ -251,8 +254,8 @@ export function ExitFlow({ onSuccess }: { onSuccess?: () => void }) {
                     <div className="flex items-center"><Calendar className="mr-3 h-4 w-4 text-muted-foreground"/><strong>Exit:</strong><span className="ml-auto text-right">{formatTime(receiptData?.exitTime)}</span></div>
                     <div className="flex items-center"><Clock className="mr-3 h-4 w-4 text-muted-foreground"/><strong>Duration:</strong><span className="ml-auto">{receiptData?.parkingDuration}</span></div>
                     <div className="flex items-center text-lg font-bold"><strong>Total:</strong><span className="ml-auto">Rs {receiptData?.charges.toFixed(2)}</span></div>
-                    {receiptData?.pdfUrl && (
-                        <div className="flex items-center"><Link href={receiptData.pdfUrl} className="text-sm text-primary hover:underline" target="_blank">View PDF Receipt</Link></div>
+                    {pdfUrl && (
+                        <div className="flex items-center"><Link href={pdfUrl} className="text-sm text-primary hover:underline" target="_blank">View PDF Receipt</Link></div>
                     )}
                 </div>
                 {receiptData?.receipt && (
@@ -267,26 +270,16 @@ export function ExitFlow({ onSuccess }: { onSuccess?: () => void }) {
                 </>
                 )}
                 <DialogFooter className="sm:justify-start pt-4">
-                {receiptData && (
-                    <Button 
-                        className="w-full" 
-                        size="lg"
-                        onClick={() => {
-                            const text = 
-`*** PARKING RECEIPT ***
-Car: ${receiptData.carNumber}
-Entry: ${formatTime(receiptData.entryTime)}
-Exit: ${formatTime(receiptData.exitTime)}
-Duration: ${receiptData.parkingDuration}
-Total: Rs ${receiptData.charges.toFixed(2)}
-Thank you for parking with us!`;
-
-                            const url = `https://wa.me/${receiptData.customerMobile}?text=` + encodeURIComponent(text);
-                            window.open(url, "_blank");
-                        }}
+                {receiptData && pdfUrl && (
+                  <Button asChild className="w-full" size="lg">
+                    <a
+                      href={`https://wa.me/?text=Your Receipt%0A${window.location.origin}${pdfUrl}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
                     >
-                        <Smartphone className="mr-2 h-4 w-4"/> Share via WhatsApp
-                    </Button>
+                      <Smartphone className="mr-2 h-4 w-4"/> Share via WhatsApp
+                    </a>
+                  </Button>
                 )}
                 </DialogFooter>
             </DialogContent>
