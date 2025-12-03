@@ -10,6 +10,7 @@ import { initializeServerApp } from '@/firebase/server-init';
 import type { ParkingRecord, Receipt, PricingConfig } from './types';
 import { v4 as uuidv4 } from 'uuid';
 import { getPricingConfig } from './actions/pricing';
+import { generateReceiptPDF } from "@/lib/pdf-receipt";
 
 const ParkCarSchema = z.object({
   licensePlate: z.string().min(3, 'License plate must be at least 3 characters.'),
@@ -191,9 +192,26 @@ export async function checkoutCar(carId: string) {
         });
     });
 
+    // Generate PDF Receipt and upload to Firebase Storage
+    const pdfUrl = await generateReceiptPDF({
+      carNumber: car!.licensePlate,
+      entryTime: car!.entryTimestamp,
+      exitTime: receiptDataForFlow.exitTime,
+      parkingDuration: receiptDataForFlow.parkingDuration,
+      charges: receiptDataForFlow.charges,
+    });
+
+    // Attach PDF link to returned success object
+    receiptDataForFlow.pdfUrl = pdfUrl;
+
     revalidatePath('/dashboard');
 
-    return { success: { ...receiptDataForFlow, customerMobile: car!.customerMobileNumber } };
+    return { 
+      success: { 
+        ...receiptDataForFlow, 
+        customerMobile: car!.customerMobileNumber 
+      } 
+    };
 
   } catch (e) {
     console.error("Checkout Error: ", e);

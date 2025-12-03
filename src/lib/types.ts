@@ -17,6 +17,7 @@ export type Receipt = {
   duration: number; // in minutes
   charges: number;
   exitTimestamp: string; // ISO string
+  pdfUrl?: string;
 };
 
 export type PricingConfig = {
