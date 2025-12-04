@@ -270,16 +270,22 @@ export function ExitFlow({ onSuccess }: { onSuccess?: () => void }) {
                 </>
                 )}
                 <DialogFooter className="sm:justify-start pt-4">
-                {receiptData && pdfUrl && (
-                  <Button asChild className="w-full" size="lg">
-                    <a
-                      href={`https://wa.me/?text=Your Receipt%0A${window.location.origin}${pdfUrl}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
+                {receiptData && (
+                    <Button 
+                        asChild
+                        className="w-full" 
+                        size="lg"
                     >
-                      <Smartphone className="mr-2 h-4 w-4"/> Share via WhatsApp
-                    </a>
-                  </Button>
+                        <a
+                        href={`https://wa.me/${receiptData.customerMobile}?text=${encodeURIComponent(
+                            `Here is your parking receipt:\n${window.location.origin}${pdfUrl}`
+                        )}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        >
+                            <Smartphone className="mr-2 h-4 w-4"/> Share via WhatsApp
+                        </a>
+                    </Button>
                 )}
                 </DialogFooter>
             </DialogContent>

@@ -139,8 +139,6 @@ export async function checkoutCar(carId: string) {
         );
         
         receiptDataForFlow = {
-            carId: car.id,
-            receiptId: receiptId,
             carNumber: car.licensePlate,
             entryTime: car.entryTimestamp,
             exitTime: exitTimestamp,
@@ -195,7 +193,9 @@ export async function checkoutCar(carId: string) {
     return { 
       success: { 
         ...receiptDataForFlow, 
-        customerMobile: car!.customerMobileNumber 
+        customerMobile: car!.customerMobileNumber,
+        receiptId: receiptId,
+        carId: car!.id
       } 
     };
 
