@@ -244,7 +244,7 @@ export function ExitFlow({ onSuccess }: { onSuccess?: () => void }) {
                 <Smartphone className="h-5 w-5 text-primary" />
                 <div>
                     <p className="font-semibold">Customer Mobile</p>
-                    <p className="text-muted-foreground">{selectedCar.customerMobileNumber}</p>
+                    <p className="text-muted-foreground">{selectedCar.customerMobile}</p>
                 </div>
               </div>
               <Button onClick={handleCheckout} disabled={isCheckingOut} className="w-full" size="lg">
@@ -329,3 +329,5 @@ export function ExitFlow({ onSuccess }: { onSuccess?: () => void }) {
     </>
   );
 }
+
+    
