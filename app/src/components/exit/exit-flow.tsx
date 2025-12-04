@@ -129,8 +129,6 @@ export function ExitFlow({ onSuccess }: { onSuccess?: () => void }) {
   
   const showSearch = foundCars.length === 0 && selectedCar === null;
 
-  const pdfUrl = receiptData ? `/api/receipt-pdf?id=${receiptData.receiptId}&carId=${receiptData.carId}` : '';
-
   return (
     <>
       <div className="w-full space-y-6 pt-4">
@@ -254,9 +252,6 @@ export function ExitFlow({ onSuccess }: { onSuccess?: () => void }) {
                     <div className="flex items-center"><Calendar className="mr-3 h-4 w-4 text-muted-foreground"/><strong>Exit:</strong><span className="ml-auto text-right">{formatTime(receiptData?.exitTime)}</span></div>
                     <div className="flex items-center"><Clock className="mr-3 h-4 w-4 text-muted-foreground"/><strong>Duration:</strong><span className="ml-auto">{receiptData?.parkingDuration}</span></div>
                     <div className="flex items-center text-lg font-bold"><strong>Total:</strong><span className="ml-auto">Rs {receiptData?.charges.toFixed(2)}</span></div>
-                    {pdfUrl && (
-                        <div className="flex items-center"><Link href={pdfUrl} className="text-sm text-primary hover:underline" target="_blank">View PDF Receipt</Link></div>
-                    )}
                 </div>
                 {receiptData?.receipt && (
                 <>
@@ -277,8 +272,8 @@ export function ExitFlow({ onSuccess }: { onSuccess?: () => void }) {
                         size="lg"
                     >
                         <a
-                        href={`https://wa.me/${receiptData.customerMobile}?text=${encodeURIComponent(
-                            `Here is your parking receipt:\n${window.location.origin}${pdfUrl}`
+                        href={`https://wa.me/?text=${encodeURIComponent(
+                            `*** PARKING RECEIPT ***\nCar: ${receiptData.carNumber}\nEntry: ${formatTime(receiptData.entryTime)}\nExit: ${formatTime(receiptData.exitTime)}\nDuration: ${receiptData.parkingDuration}\nTotal: Rs ${receiptData.charges.toFixed(2)}\nThank you for parking with us!`
                         )}`}
                         target="_blank"
                         rel="noopener noreferrer"
