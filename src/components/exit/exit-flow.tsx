@@ -277,7 +277,7 @@ export function ExitFlow({ onSuccess }: { onSuccess?: () => void }) {
                         size="lg"
                     >
                         <a
-                        href={`https://wa.me/?text=${encodeURIComponent(
+                        href={`https://wa.me/${receiptData.customerMobile}?text=${encodeURIComponent(
                             `Here is your parking receipt:\n${window.location.origin}${pdfUrl}`
                         )}`}
                         target="_blank"
