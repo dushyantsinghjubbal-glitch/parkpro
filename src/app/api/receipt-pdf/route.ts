@@ -4,21 +4,6 @@ import { initializeServerApp } from "@/firebase/server-init";
 import { doc, getDoc } from "firebase/firestore";
 import { PDFDocument, rgb, StandardFonts } from 'pdf-lib';
 
-async function streamToBuffer(stream: ReadableStream): Promise<Buffer> {
-    const reader = stream.getReader();
-    const chunks: Uint8Array[] = [];
-  
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) {
-        break;
-      }
-      chunks.push(value);
-    }
-  
-    return Buffer.concat(chunks);
-  }
-
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
   const receiptId = searchParams.get("id");
