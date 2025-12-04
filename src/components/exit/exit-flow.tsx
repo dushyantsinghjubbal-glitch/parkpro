@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useTransition, useEffect } from 'react';
+import { useState, useTransition } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -17,7 +17,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { ScanLine, Loader2, User, Calendar, Smartphone, Camera, Hash, Clock, Receipt, CarIcon } from 'lucide-react';
+import { ScanLine, Loader2, User, Calendar, Smartphone, Camera, Hash, Clock, Receipt } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import { LicensePlateScanner } from '@/components/entry/license-plate-scanner';
 
@@ -130,20 +130,21 @@ export function ExitFlow({ onSuccess }: { onSuccess?: () => void }) {
 
   const handleShare = () => {
     if (!receiptData) return;
-    const details = {
-        carNumber: receiptData.carNumber,
-        entryTime: formatTime(receiptData.entryTime),
-        exitTime: formatTime(receiptData.exitTime),
-        parkingDuration: receiptData.parkingDuration,
-        charges: receiptData.charges.toFixed(2),
-        customerMobile: receiptData.customerMobile,
-        receipt: receiptData.receipt,
-    };
-    const receiptText = `*** PARKING RECEIPT ***\nCar: ${details.carNumber}\nEntry: ${details.entryTime}\nExit: ${details.exitTime}\nDuration: ${details.parkingDuration}\nTotal: Rs ${details.charges}\n\n${details.receipt}\n\nThank you for parking with us!`;
 
-    const url = `https://wa.me/${details.customerMobile}?text=${encodeURIComponent(receiptText)}`;
+    const msg =
+        `PARKING RECEIPT\n` +
+        `Car: ${receiptData.carNumber}\n` +
+        `Entry: ${formatTime(receiptData.entryTime)}\n` +
+        `Exit: ${formatTime(receiptData.exitTime)}\n` +
+        `Duration: ${receiptData.parkingDuration}\n` +
+        `Total: Rs ${receiptData.charges.toFixed(2)}\n\n` +
+        `Thank you for parking with us!`;
+
+    const url = `https://wa.me/${receiptData.customerMobile}?text=${encodeURIComponent(msg)}`;
+
     window.open(url, "_blank");
-  }
+  };
+
 
   return (
     <>
@@ -243,7 +244,7 @@ export function ExitFlow({ onSuccess }: { onSuccess?: () => void }) {
                 <Smartphone className="h-5 w-5 text-primary" />
                 <div>
                     <p className="font-semibold">Customer Mobile</p>
-                    <p className="text-muted-foreground">{selectedCar.customerMobileNumber}</p>
+                    <p className="text-muted-foreground">{selectedCar.customerMobile}</p>
                 </div>
               </div>
               <Button onClick={handleCheckout} disabled={isCheckingOut} className="w-full" size="lg">
@@ -254,46 +255,72 @@ export function ExitFlow({ onSuccess }: { onSuccess?: () => void }) {
           </Card>
         )}
         
-        <Dialog open={!!receiptData} onOpenChange={handleReceiptDialogClose}>
-            <DialogContent className="w-[90vw] sm:max-w-lg rounded-md">
-                <DialogHeader>
-                    <DialogTitle className="flex items-center gap-2 text-xl sm:text-2xl"><Receipt /> Payment Receipt</DialogTitle>
-                    <DialogDescription>
-                        Receipt for vehicle <span className="font-bold font-mono">{receiptData?.carNumber}</span>.
-                    </DialogDescription>
-                </DialogHeader>
-                <div className="space-y-4 py-4 text-sm">
-                    <div className="flex items-center"><Hash className="mr-3 h-4 w-4 text-muted-foreground"/><strong>License Plate:</strong><span className="ml-auto font-mono">{receiptData?.carNumber}</span></div>
-                    <div className="flex items-center"><Calendar className="mr-3 h-4 w-4 text-muted-foreground"/><strong>Entry:</strong><span className="ml-auto text-right">{formatTime(receiptData?.entryTime)}</span></div>
-                    <div className="flex items-center"><Calendar className="mr-3 h-4 w-4 text-muted-foreground"/><strong>Exit:</strong><span className="ml-auto text-right">{formatTime(receiptData?.exitTime)}</span></div>
-                    <div className="flex items-center"><Clock className="mr-3 h-4 w-4 text-muted-foreground"/><strong>Duration:</strong><span className="ml-auto">{receiptData?.parkingDuration}</span></div>
-                    <div className="flex items-center text-lg font-bold"><strong>Total:</strong><span className="ml-auto">Rs {receiptData?.charges.toFixed(2)}</span></div>
-                </div>
-                {receiptData?.receipt && (
-                <>
-                    <Separator className="my-2"/>
-                    <div className="space-y-2">
-                        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">AI Generated Summary</p>
-                        <div className="rounded-md bg-muted p-3 text-sm text-muted-foreground whitespace-pre-wrap font-mono">
-                            {receiptData.receipt}
-                        </div>
-                    </div>
-                </>
-                )}
-                <DialogFooter className="sm:justify-start pt-4">
-                {receiptData && (
-                    <Button 
-                        onClick={handleShare}
-                        className="w-full" 
-                        size="lg"
-                    >
-                        <Smartphone className="mr-2 h-4 w-4"/> Share via WhatsApp
-                    </Button>
-                )}
-                </DialogFooter>
-            </DialogContent>
-        </Dialog>
       </div>
+      <Dialog open={!!receiptData} onOpenChange={handleReceiptDialogClose}>
+        <DialogContent className="w-[90vw] sm:max-w-lg rounded-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-xl sm:text-2xl">
+              <Receipt /> Payment Receipt
+            </DialogTitle>
+            <DialogDescription>
+              Receipt for vehicle <span className="font-bold font-mono">{receiptData?.carNumber}</span>.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 py-4 text-sm">
+            <div className="flex items-center">
+              <Hash className="mr-3 h-4 w-4 text-muted-foreground" />
+              <strong>License Plate:</strong>
+              <span className="ml-auto font-mono">{receiptData?.carNumber}</span>
+            </div>
+
+            <div className="flex items-center">
+              <Calendar className="mr-3 h-4 w-4 text-muted-foreground" />
+              <strong>Entry:</strong>
+              <span className="ml-auto text-right">{formatTime(receiptData?.entryTime)}</span>
+            </div>
+
+            <div className="flex items-center">
+              <Calendar className="mr-3 h-4 w-4 text-muted-foreground" />
+              <strong>Exit:</strong>
+              <span className="ml-auto text-right">{formatTime(receiptData?.exitTime)}</span>
+            </div>
+
+            <div className="flex items-center">
+              <Clock className="mr-3 h-4 w-4 text-muted-foreground" />
+              <strong>Duration:</strong>
+              <span className="ml-auto">{receiptData?.parkingDuration}</span>
+            </div>
+
+            <div className="flex items-center text-lg font-bold">
+              <strong>Total:</strong>
+              <span className="ml-auto">Rs {receiptData?.charges.toFixed(2)}</span>
+            </div>
+          </div>
+
+          {receiptData?.receipt && (
+            <>
+              <Separator className="my-2" />
+              <div className="space-y-2">
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                  AI Generated Summary
+                </p>
+                <div className="rounded-md bg-muted p-3 text-sm text-muted-foreground whitespace-pre-wrap font-mono">
+                  {receiptData.receipt}
+                </div>
+              </div>
+            </>
+          )}
+
+          <DialogFooter className="sm:justify-start pt-4">
+            {receiptData && (
+              <Button onClick={handleShare} className="w-full" size="lg">
+                <Smartphone className="mr-2 h-4 w-4" /> Share via WhatsApp
+              </Button>
+            )}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
      <LicensePlateScanner 
         isOpen={isScannerOpen}
         onOpenChange={setScannerOpen}

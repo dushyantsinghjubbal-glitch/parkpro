@@ -7,7 +7,7 @@ import { calculateCharges, calculateDuration } from './utils';
 import { generatePaymentReceipt } from '@/ai/flows/generate-payment-receipt';
 import { collection, getDocs, query, where, doc, runTransaction, setDoc } from 'firebase/firestore';
 import { initializeServerApp } from '@/firebase/server-init';
-import type { ParkingRecord, Receipt, PricingConfig } from './types';
+import type { ParkingRecord, Receipt } from './types';
 import { v4 as uuidv4 } from 'uuid';
 import { getPricingConfig } from './actions/pricing';
 
@@ -50,7 +50,7 @@ export async function parkCar(prevState: any, formData: FormData) {
     }
 
     const newRecordId = uuidv4();
-    const newRecord: ParkingRecord = {
+    const newRecord: Omit<ParkingRecord, 'customerMobileNumber'> = {
       id: newRecordId,
       ...validatedFields.data,
       licensePlate: validatedFields.data.licensePlate.toUpperCase(),
@@ -193,7 +193,7 @@ export async function checkoutCar(carId: string) {
     return { 
       success: { 
         ...receiptDataForFlow, 
-        customerMobile: car!.customerMobileNumber,
+        customerMobile: car!.customerMobile,
         receiptId: receiptId,
         carId: car!.id
       } 
@@ -226,7 +226,7 @@ export async function updatePricingConfig(prevState: any, formData: FormData) {
     const { firestore } = initializeServerApp();
     const configDocRef = doc(firestore, 'app_config', 'pricing');
     
-    const newConfig: PricingConfig = {
+    const newConfig = {
       hourlyRate: validatedFields.data.hourlyRate,
       dailyRate: validatedFields.data.dailyRate,
       monthlyRate: validatedFields.data.monthlyRate,

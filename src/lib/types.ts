@@ -1,7 +1,7 @@
 export type ParkingRecord = {
   id: string;
   licensePlate: string;
-  customerMobileNumber: string;
+  customerMobile: string;
   entryTimestamp: string; // ISO string
   exitTimestamp?: string; // ISO string
   parkingStatus: 'parked' | 'exited';
@@ -17,7 +17,6 @@ export type Receipt = {
   duration: number; // in minutes
   charges: number;
   exitTimestamp: string; // ISO string
-  pdfUrl?: string;
 };
 
 export type PricingConfig = {
