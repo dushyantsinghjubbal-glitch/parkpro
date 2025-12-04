@@ -131,16 +131,10 @@ export function ExitFlow({ onSuccess }: { onSuccess?: () => void }) {
   const handleShare = () => {
     if (!receiptData) return;
     const details = {
-        carNumber: receiptData.carNumber,
-        entryTime: formatTime(receiptData.entryTime),
-        exitTime: formatTime(receiptData.exitTime),
-        parkingDuration: receiptData.parkingDuration,
-        charges: receiptData.charges.toFixed(2),
-        customerMobile: receiptData.customerMobile
+        customerMobile: receiptData.customerMobile,
+        receipt: receiptData.receipt,
     };
-    const receiptText = `*** PARKING RECEIPT ***\nCar: ${details.carNumber}\nEntry: ${details.entryTime}\nExit: ${details.exitTime}\nDuration: ${details.parkingDuration}\nTotal: Rs ${details.charges}\n\n${receiptData.receipt}\n\nThank you for parking with us!`;
-
-    const url = `https://wa.me/${details.customerMobile}?text=${encodeURIComponent(receiptText)}`;
+    const url = `https://wa.me/${details.customerMobile}?text=${encodeURIComponent(details.receipt)}`;
     window.open(url, "_blank");
   }
 

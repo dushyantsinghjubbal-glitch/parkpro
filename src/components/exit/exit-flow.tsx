@@ -18,7 +18,6 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { ScanLine, Loader2, User, Calendar, Smartphone, Camera, Hash, Clock, Receipt, CarIcon } from 'lucide-react';
-import Link from 'next/link';
 import { Separator } from '@/components/ui/separator';
 import { LicensePlateScanner } from '@/components/entry/license-plate-scanner';
 
@@ -129,7 +128,22 @@ export function ExitFlow({ onSuccess }: { onSuccess?: () => void }) {
   
   const showSearch = foundCars.length === 0 && selectedCar === null;
 
-  const pdfUrl = receiptData ? `/api/receipt-pdf?id=${receiptData.receiptId}&carId=${receiptData.carId}` : '';
+  const handleShare = () => {
+    if (!receiptData) return;
+    const details = {
+        carNumber: receiptData.carNumber,
+        entryTime: formatTime(receiptData.entryTime),
+        exitTime: formatTime(receiptData.exitTime),
+        parkingDuration: receiptData.parkingDuration,
+        charges: receiptData.charges.toFixed(2),
+        customerMobile: receiptData.customerMobile,
+        receipt: receiptData.receipt,
+    };
+    const receiptText = `*** PARKING RECEIPT ***\nCar: ${details.carNumber}\nEntry: ${details.entryTime}\nExit: ${details.exitTime}\nDuration: ${details.parkingDuration}\nTotal: Rs ${details.charges}\n\n${details.receipt}\n\nThank you for parking with us!`;
+
+    const url = `https://wa.me/${details.customerMobile}?text=${encodeURIComponent(receiptText)}`;
+    window.open(url, "_blank");
+  }
 
   return (
     <>
@@ -254,9 +268,6 @@ export function ExitFlow({ onSuccess }: { onSuccess?: () => void }) {
                     <div className="flex items-center"><Calendar className="mr-3 h-4 w-4 text-muted-foreground"/><strong>Exit:</strong><span className="ml-auto text-right">{formatTime(receiptData?.exitTime)}</span></div>
                     <div className="flex items-center"><Clock className="mr-3 h-4 w-4 text-muted-foreground"/><strong>Duration:</strong><span className="ml-auto">{receiptData?.parkingDuration}</span></div>
                     <div className="flex items-center text-lg font-bold"><strong>Total:</strong><span className="ml-auto">Rs {receiptData?.charges.toFixed(2)}</span></div>
-                    {pdfUrl && (
-                        <div className="flex items-center"><Link href={pdfUrl} className="text-sm text-primary hover:underline" target="_blank">View PDF Receipt</Link></div>
-                    )}
                 </div>
                 {receiptData?.receipt && (
                 <>
@@ -272,19 +283,11 @@ export function ExitFlow({ onSuccess }: { onSuccess?: () => void }) {
                 <DialogFooter className="sm:justify-start pt-4">
                 {receiptData && (
                     <Button 
-                        asChild
+                        onClick={handleShare}
                         className="w-full" 
                         size="lg"
                     >
-                        <a
-                        href={`https://wa.me/${receiptData.customerMobile}?text=${encodeURIComponent(
-                            `Here is your parking receipt:\n${window.location.origin}${pdfUrl}`
-                        )}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        >
-                            <Smartphone className="mr-2 h-4 w-4"/> Share via WhatsApp
-                        </a>
+                        <Smartphone className="mr-2 h-4 w-4"/> Share via WhatsApp
                     </Button>
                 )}
                 </DialogFooter>
