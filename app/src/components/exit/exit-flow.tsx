@@ -113,9 +113,11 @@ export function ExitFlow({ onSuccess }: { onSuccess?: () => void }) {
     handleSearch({ licensePlate: plate });
   };
 
-  const handleReceiptDialogClose = () => {
-    setReceiptData(null);
-    onSuccess?.();
+  const handleReceiptDialogClose = (open: boolean) => {
+    if (!open) {
+      setReceiptData(null);
+      onSuccess?.();
+    }
   }
 
   const handleReset = () => {
@@ -254,45 +256,71 @@ export function ExitFlow({ onSuccess }: { onSuccess?: () => void }) {
         )}
         
       </div>
-      <Dialog open={!!receiptData} onOpenChange={(open) => !open && handleReceiptDialogClose()}>
-            <DialogContent className="w-[90vw] sm:max-w-lg rounded-md">
-                <DialogHeader>
-                    <DialogTitle className="flex items-center gap-2 text-xl sm:text-2xl"><Receipt /> Payment Receipt</DialogTitle>
-                    <DialogDescription>
-                        Receipt for vehicle <span className="font-bold font-mono">{receiptData?.carNumber}</span>.
-                    </DialogDescription>
-                </DialogHeader>
-                <div className="space-y-4 py-4 text-sm">
-                    <div className="flex items-center"><Hash className="mr-3 h-4 w-4 text-muted-foreground"/><strong>License Plate:</strong><span className="ml-auto font-mono">{receiptData?.carNumber}</span></div>
-                    <div className="flex items-center"><Calendar className="mr-3 h-4 w-4 text-muted-foreground"/><strong>Entry:</strong><span className="ml-auto text-right">{formatTime(receiptData?.entryTime)}</span></div>
-                    <div className="flex items-center"><Calendar className="mr-3 h-4 w-4 text-muted-foreground"/><strong>Exit:</strong><span className="ml-auto text-right">{formatTime(receiptData?.exitTime)}</span></div>
-                    <div className="flex items-center"><Clock className="mr-3 h-4 w-4 text-muted-foreground"/><strong>Duration:</strong><span className="ml-auto">{receiptData?.parkingDuration}</span></div>
-                    <div className="flex items-center text-lg font-bold"><strong>Total:</strong><span className="ml-auto">Rs {receiptData?.charges.toFixed(2)}</span></div>
+      <Dialog open={!!receiptData} onOpenChange={handleReceiptDialogClose}>
+        <DialogContent className="w-[90vw] sm:max-w-lg rounded-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-xl sm:text-2xl">
+              <Receipt /> Payment Receipt
+            </DialogTitle>
+            <DialogDescription>
+              Receipt for vehicle <span className="font-bold font-mono">{receiptData?.carNumber}</span>.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 py-4 text-sm">
+            <div className="flex items-center">
+              <Hash className="mr-3 h-4 w-4 text-muted-foreground" />
+              <strong>License Plate:</strong>
+              <span className="ml-auto font-mono">{receiptData?.carNumber}</span>
+            </div>
+
+            <div className="flex items-center">
+              <Calendar className="mr-3 h-4 w-4 text-muted-foreground" />
+              <strong>Entry:</strong>
+              <span className="ml-auto text-right">{formatTime(receiptData?.entryTime)}</span>
+            </div>
+
+            <div className="flex items-center">
+              <Calendar className="mr-3 h-4 w-4 text-muted-foreground" />
+              <strong>Exit:</strong>
+              <span className="ml-auto text-right">{formatTime(receiptData?.exitTime)}</span>
+            </div>
+
+            <div className="flex items-center">
+              <Clock className="mr-3 h-4 w-4 text-muted-foreground" />
+              <strong>Duration:</strong>
+              <span className="ml-auto">{receiptData?.parkingDuration}</span>
+            </div>
+
+            <div className="flex items-center text-lg font-bold">
+              <strong>Total:</strong>
+              <span className="ml-auto">Rs {receiptData?.charges.toFixed(2)}</span>
+            </div>
+          </div>
+
+          {receiptData?.receipt && (
+            <>
+              <Separator className="my-2" />
+              <div className="space-y-2">
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                  AI Generated Summary
+                </p>
+                <div className="rounded-md bg-muted p-3 text-sm text-muted-foreground whitespace-pre-wrap font-mono">
+                  {receiptData.receipt}
                 </div>
-                {receiptData?.receipt && (
-                <>
-                    <Separator className="my-2"/>
-                    <div className="space-y-2">
-                        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">AI Generated Summary</p>
-                        <div className="rounded-md bg-muted p-3 text-sm text-muted-foreground whitespace-pre-wrap font-mono">
-                            {receiptData.receipt}
-                        </div>
-                    </div>
-                </>
-                )}
-                <DialogFooter className="sm:justify-start pt-4">
-                {receiptData && (
-                    <Button 
-                        onClick={handleShare}
-                        className="w-full" 
-                        size="lg"
-                    >
-                        <Smartphone className="mr-2 h-4 w-4"/> Share via WhatsApp
-                    </Button>
-                )}
-                </DialogFooter>
-            </DialogContent>
-        </Dialog>
+              </div>
+            </>
+          )}
+
+          <DialogFooter className="sm:justify-start pt-4">
+            {receiptData && (
+              <Button onClick={handleShare} className="w-full" size="lg">
+                <Smartphone className="mr-2 h-4 w-4" /> Share via WhatsApp
+              </Button>
+            )}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
      <LicensePlateScanner 
         isOpen={isScannerOpen}
         onOpenChange={setScannerOpen}
