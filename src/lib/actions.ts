@@ -3,7 +3,7 @@
 
 import { z } from 'zod';
 import { revalidatePath } from 'next/cache';
-import { calculateCharges, calculateDuration } from './utils';
+import { calculateCharges, calculateDuration } from '@/lib/utils';
 import { generatePaymentReceipt } from '@/ai/flows/generate-payment-receipt';
 import { collection, getDocs, query, where, doc, runTransaction, setDoc } from 'firebase/firestore';
 import { initializeServerApp } from '@/firebase/server-init';
@@ -50,7 +50,7 @@ export async function parkCar(prevState: any, formData: FormData) {
     }
 
     const newRecordId = uuidv4();
-    const newRecord: Omit<ParkingRecord, 'customerMobileNumber'> = {
+    const newRecord: ParkingRecord = {
       id: newRecordId,
       ...validatedFields.data,
       licensePlate: validatedFields.data.licensePlate.toUpperCase(),
